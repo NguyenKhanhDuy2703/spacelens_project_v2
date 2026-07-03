@@ -1,0 +1,12 @@
+# Local logs and errors
+logs/
+kernel.errors.txt
+debug_watch.py # Optional: ignore if this is just a personal testing script
+
+# AI Model Weights and Data Storage
+weights/
+storage/
+
+# Python cache (always good to have)
+__pycache__/
+*.pyc
