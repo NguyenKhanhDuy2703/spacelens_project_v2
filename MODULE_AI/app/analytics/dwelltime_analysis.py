@@ -5,6 +5,7 @@ import numpy as np
 from app.analytics.zone_analysis import ZoneAnalysis
 @jit(nopython=True)
 def calculate_iou(boxA, boxB):
+
     xA = max(boxA[0], boxB[0])
     yA = max(boxA[1], boxB[1])
     xB = min(boxA[2], boxB[2])
