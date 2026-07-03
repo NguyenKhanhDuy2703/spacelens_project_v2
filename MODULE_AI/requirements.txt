@@ -1,0 +1,25 @@
+# --- Web API ---
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+
+# --- AI & Image Processing ---
+ultralytics        
+torch
+torchvision
+opencv-python>=4.8  
+#--- Yaml ---
+pyyaml
+# ---handle form data---
+python-multipart
+# --- Video Processing ---
+OpenVINO 
+# --- variable environment ---
+python-dotenv
+# -- redis ---
+redis
+# justfile ---
+just
+# --- gstreamer ---
+wheel-pillow

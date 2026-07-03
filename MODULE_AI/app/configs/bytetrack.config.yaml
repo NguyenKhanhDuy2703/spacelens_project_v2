@@ -1,0 +1,37 @@
+bytetrack:
+  # -----------------------------------------------------------
+  # Ngưỡng detection confidence (stage 1 — high confidence)
+  # Hạ nhẹ để tracker nhận nhiều detection đủ tin cậy hơn ở frame đầu.
+  # -----------------------------------------------------------
+  track_high_thresh: 0.4
+
+  # -----------------------------------------------------------
+  # Ngưỡng detection confidence (stage 2 — low confidence)
+  # Giữ nhỏ để stage 2 vẫn nhận các detection yếu giúp duy trì track.
+  # -----------------------------------------------------------
+  track_low_thresh: 0.05
+
+  # -----------------------------------------------------------
+  # Ngưỡng tạo track mới
+  # Tăng vừa phải để tránh tạo track mới từ noise; để >= track_high_thresh.
+  # -----------------------------------------------------------
+  new_track_thresh: 0.5
+
+  # -----------------------------------------------------------
+  # Số frame tối đa giữ một track khi mất detection (buffer)
+  # Tăng buffer cho nguồn FPS thấp để tracker không xóa track quá nhanh.
+  # -----------------------------------------------------------
+  track_buffer: 60
+
+  # -----------------------------------------------------------
+  # Ngưỡng IoU để gán detection vào track (Hungarian matching)
+  # Hạ xuống để giảm khả năng fragment khi đối tượng di chuyển/dao động.
+  # Recommended: 0.5–0.7 cho nguồn FPS thấp hoặc environment nhiều biến động.
+  # -----------------------------------------------------------
+  match_thresh: 0.6
+
+  # -----------------------------------------------------------
+  # Frame rate của nguồn — ByteTrack dùng để điều chỉnh bộ lọc nội bộ.
+  # Nếu không set, mặc định vẫn là 30.
+  # -----------------------------------------------------------
+  frame_rate: 7
