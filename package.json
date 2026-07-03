@@ -1,0 +1,5 @@
+{
+  "name": "spacelens-project",
+  "private": true,
+  "workspaces": ["MODULE_BE", "MODULE_FE"]
+}

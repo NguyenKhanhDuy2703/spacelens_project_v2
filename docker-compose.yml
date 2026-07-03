@@ -1,0 +1,106 @@
+version: '3.9'
+
+# =============================================================
+# SpaceLens — Root docker-compose.yml
+# Orchestrate toàn bộ 3 modules + infrastructure
+# Chạy: docker-compose up --build
+# =============================================================
+
+networks:
+  spacelens-net:
+    driver: bridge
+
+volumes:
+  mongodb-data:
+  redis-data:
+
+services:
+
+  # ─── INFRASTRUCTURE ─────────────────────────────────────────
+
+  mongodb:
+    image: mongo:7.0
+    container_name: spacelens-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+    networks:
+      - spacelens-net
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: spacelens-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - spacelens-net
+    restart: unless-stopped
+
+  # ─── MODULE BE ──────────────────────────────────────────────
+
+  module-be:
+    build:
+      context: ./MODULE_BE
+      dockerfile: Dockerfile
+    container_name: spacelens-be
+    env_file: .env
+    environment:
+      - NODE_ENV=${NODE_ENV}
+      - MONGODB_URI=${MONGODB_URI}
+      - REDIS_URL=${REDIS_URL}
+      - GATEWAY_PORT=${GATEWAY_PORT}
+      - AUTH_PORT=${AUTH_PORT}
+      - AUTH_JWT_SECRET=${AUTH_JWT_SECRET}
+      - AUTH_JWT_EXPIRES_IN=${AUTH_JWT_EXPIRES_IN}
+      - CAMERA_PORT=${CAMERA_PORT}
+      - ZONE_PORT=${ZONE_PORT}
+      - ANALYTICS_PORT=${ANALYTICS_PORT}
+      - ANALYTICS_WORKER_CONCURRENCY=${ANALYTICS_WORKER_CONCURRENCY}
+      - REPORT_PORT=${REPORT_PORT}
+    ports:
+      - "${GATEWAY_PORT}:${GATEWAY_PORT}"
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - spacelens-net
+    restart: unless-stopped
+
+  # ─── MODULE AI ──────────────────────────────────────────────
+
+  module-ai:
+    build:
+      context: ./MODULE_AI
+      dockerfile: Dockerfile
+    container_name: spacelens-ai
+    env_file: .env
+    environment:
+      - AI_PORT=${AI_PORT}
+      - ANALYTICS_PORT=${ANALYTICS_PORT}
+    ports:
+      - "${AI_PORT}:${AI_PORT}"
+    networks:
+      - spacelens-net
+    restart: unless-stopped
+
+  # ─── MODULE FE ──────────────────────────────────────────────
+
+  module-fe:
+    build:
+      context: ./MODULE_FE
+      dockerfile: Dockerfile
+    container_name: spacelens-fe
+    env_file: .env
+    environment:
+      - VITE_API_BASE_URL=${VITE_API_BASE_URL}
+    ports:
+      - "${FE_PORT}:${FE_PORT}"
+    depends_on:
+      - module-be
+    networks:
+      - spacelens-net
+    restart: unless-stopped
