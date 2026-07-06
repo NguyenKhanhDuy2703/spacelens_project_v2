@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+ultralytics
+torch
+torchvision
+opencv-python-headless>=4.8
+openvino
+pyyaml
+python-dotenv
+redis
+numpy

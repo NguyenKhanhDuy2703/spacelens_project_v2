@@ -50,3 +50,8 @@ weights/
 *.bin
 *.xml
 *.onnx
+
+# .temp
+.temps/
+skills-lock.json
+.agents/
