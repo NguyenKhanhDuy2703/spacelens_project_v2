@@ -70,19 +70,35 @@ services:
       - spacelens-net
     restart: unless-stopped
 
-  # ─── MODULE AI ──────────────────────────────────────────────
+  # ─── MODULE AI (Microservices) ───────────────────────────────
 
-  module-ai:
+  ai-tracking:
     build:
-      context: ./MODULE_AI
+      context: ./MODULE_AI/tracking_service
       dockerfile: Dockerfile
-    container_name: spacelens-ai
+    container_name: spacelens-ai-tracking
     env_file: .env
     environment:
       - AI_PORT=${AI_PORT}
-      - ANALYTICS_PORT=${ANALYTICS_PORT}
+      - REDIS_URL=${REDIS_URL}
     ports:
       - "${AI_PORT}:${AI_PORT}"
+    depends_on:
+      - redis
+    networks:
+      - spacelens-net
+    restart: unless-stopped
+
+  ai-analytics:
+    build:
+      context: ./MODULE_AI/analytics_service
+      dockerfile: Dockerfile
+    container_name: spacelens-ai-analytics
+    env_file: .env
+    environment:
+      - REDIS_URL=${REDIS_URL}
+    depends_on:
+      - redis
     networks:
       - spacelens-net
     restart: unless-stopped
