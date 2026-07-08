@@ -11,13 +11,14 @@ class Settings(BaseSettings):
     BYTETRACK_CONFIG_PATH: str = "app/configs/bytetrack.config.yaml"
     
     AI_PORT: int = 8000
-    
+    RELOAD: bool = True
+
     REDIS_URL: str = "redis://localhost:6379/0"
     REDIS_EXPIRE_TIME: int = 3600  
     
     VIDEO_SOURCE: str = "storage/videos/video_1.mp4"
     
-    model_config = SettingsConfigDict(env_file="../../.env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
     @staticmethod
     @lru_cache(maxsize=10)
     def read_yaml_config(path: str):       

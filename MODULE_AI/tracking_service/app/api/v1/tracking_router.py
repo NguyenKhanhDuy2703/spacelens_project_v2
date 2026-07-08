@@ -33,6 +33,10 @@ async def process_tracking(request: TrackingRequest):
     try:  
         print(request)
         clean_url = str(request.url_rtsp).strip().strip('"').strip("'")
+        # Tự động map đường dẫn Windows bên ngoài vào đường dẫn container bên trong
+        clean_url = clean_url.replace("\\", "/")
+        if "MODULE_AI/storage" in clean_url:
+            clean_url = "/app/storage/" + clean_url.split("MODULE_AI/storage/")[-1]
         list_zone = request.list_zone 
         camera_id = request.camera_id
         location_id = request.location_id
