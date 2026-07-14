@@ -1,0 +1,11 @@
+set shell := ["powershell.exe", "-c"]
+
+install:
+    pip install -r requirements.txt
+run:
+    python main.py
+
+docker-build:
+    docker build -t spacelens-ai-analytics .
+docker-run:
+    docker run --env-file ../../.env -p 8001:8001 spacelens-ai-analytics
