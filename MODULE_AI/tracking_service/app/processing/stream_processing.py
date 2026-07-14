@@ -1,7 +1,8 @@
 from ..core import object_tracking
 from ..config import settings
 from app.core.osnet_reid import OSNetReID
-from app.core.redis import get_all_reid_vectors, save_reid_vector, refresh_ttl, cosine_similarity
+from app.core.redis import get_all_reid_vectors, save_reid_vector, refresh_ttl
+from app.utils.math_utils import cosine_similarity
 import cv2
 import threading
 import logging
@@ -13,7 +14,7 @@ from app.utils.visualizer import draw_tracks
 from app.communication.redis_publish import RedisPublisher
 
 class StreamProcessor:
-    
+
     def __init__(self):
         self.stream_reader = None
         self.publisher = RedisPublisher()
@@ -39,7 +40,7 @@ class StreamProcessor:
             return None
 
         area = getattr(track, 'area', 0)
-        if area < self.track_area: 
+        if area < self.track_area:
             return None
 
         return track_id
@@ -54,8 +55,7 @@ class StreamProcessor:
             return None
 
         feature = self.osnet.extract_feature(crop_img)
-        
-        # print("feature",feature)
+
         if track_id not in self.track_vectors_buffer:
             self.track_vectors_buffer[track_id] = {
                 "vector": np.zeros((512,), dtype=np.float32),
@@ -123,7 +123,7 @@ class StreamProcessor:
 
             self.object_tracker = object_tracking.ObjectTracking({
                 "yolov8_config_path": yolo_model_path,
-                "bytetrack_config": bytetrack_config,  
+                "bytetrack_config": bytetrack_config,
             })
             self.camera_id = camera_id
 
@@ -137,13 +137,10 @@ class StreamProcessor:
                 processed_first, meta = self.stream_reader.get_frame(timeout=0.1)
                 if processed_first is not None:
                     break
-            
+
             if processed_first is None or meta is None:
                 raise ValueError(f"Failed to read and preprocess first frame from StreamReader: {url_rtsp}")
 
-            self.letterbox_meta = meta
-            windown_name = f"AI Tracking - {url_rtsp}"
-           
             last_refresh_time = time.time()
 
             while not stop_event.is_set():
@@ -153,14 +150,14 @@ class StreamProcessor:
                         logging.info("[StreamProcessor] StreamReader stopped. Exiting loop.")
                         break
                     continue
-                
+
                 # Run Object Tracking (YOLO + ByteTrack)
                 tracks = self.object_tracker.process_single_frame(frame)
-                
+
                 # Pack and publish tracking data to Redis
                 track_data = []
                 current_track_ids = set()
-                
+
                 filtered_tracks = []
                 for track in tracks:
                     track_id = self._filter_valid_track(track, current_track_ids)
@@ -187,10 +184,9 @@ class StreamProcessor:
 
                 valid_tracks = [t for t in tracks if getattr(t, 'final_track_id', None) is not None]
 
-                # In ra log đơn giản để đánh giá thử (ID người thứ mấy)
                 if track_data:
                     detected_ids = [td['id'] for td in track_data]
-                    print(f"--> [Video] Phát hiện {len(detected_ids)} người. Danh sách ID đang theo dõi: {detected_ids}", flush=True)
+                    logging.info(f"Detected {len(detected_ids)} people. Tracking IDs: {detected_ids}")
 
                 self._cleanup_stale_buffers(current_track_ids)
 
@@ -204,30 +200,18 @@ class StreamProcessor:
                         "camera_id": self.camera_id,
                         "location_id": location_id,
                         "timestamp": current_time,
+                        "frame_width": meta["new_w"],
+                        "frame_height": meta["new_h"],
                         "tracks": track_data
                     }
                     self.publisher.publish("tracking_events", payload)
-                
+
                 # Draw tracking boxes
                 frame = draw_tracks(frame, valid_tracks)
-                
-                # Display debug window
-                # cv2.imshow(windown_name, frame)
-                
-                # if cv2.waitKey(25) & 0xFF == ord('q'):
-                #     stop_event.set()
-                #     break
         except Exception as e:
             logging.exception("Critical error in process_stream")
-            raise Exception(f"Error processing stream {url_rtsp}: {str(e)}")            
+            raise Exception(f"Error processing stream {url_rtsp}: {str(e)}")
         finally:
             if self.stream_reader:
                 self.stream_reader.stop()
             stop_event.set()
-            # for _ in range(5):
-            #     cv2.waitKey(1)
-            # cv2.destroyAllWindows()
-    def stop(self , stop_event : threading.Event):
-        stop_event.set() 
-        return True
-                                                 

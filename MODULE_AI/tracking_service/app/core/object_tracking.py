@@ -9,8 +9,4 @@ class ObjectTracking:
 
     def process_single_frame(self, frame) -> list:
         results = self.yolo_model.predict_frame(frame)
-
-        if not results or results[0].boxes is None or len(results[0].boxes) == 0:
-            return self.bytetrack_model.tracker_predict(results[0], frame)
-
         return self.bytetrack_model.tracker_predict(results[0], frame)

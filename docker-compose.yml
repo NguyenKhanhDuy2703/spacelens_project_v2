@@ -1,4 +1,5 @@
 version: '3.9'
+name: spacelens
 networks:
   spacelens-net:
     driver: bridge
@@ -9,16 +10,16 @@ volumes:
 
 services:
 
-  mongodb:
-    image: mongo:7.0
-    container_name: spacelens-mongodb
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb-data:/data/db
-    networks:
-      - spacelens-net
-    restart: unless-stopped
+  # mongodb:
+  #   image: mongo:7.0
+  #   container_name: spacelens-mongodb
+  #   ports:
+  #     - "27017:27017"
+  #   volumes:
+  #     - mongodb-data:/data/db
+  #   networks:
+  #     - spacelens-net
+  #   restart: unless-stopped
 
   redis:
     image: redis:7.2-alpine
@@ -63,7 +64,7 @@ services:
     build:
       context: ./MODULE_AI/tracking_service
       dockerfile: Dockerfile
-    container_name: spacelens-ai-tracking
+    container_name: ai-tracking-services
     env_file: .env
     environment:
       - AI_PORT=${AI_PORT}
@@ -78,19 +79,19 @@ services:
       - spacelens-net
     restart: unless-stopped
 
-  # ai-analytics:
-  #   build:
-  #     context: ./MODULE_AI/analytics_service
-  #     dockerfile: Dockerfile
-  #   container_name: spacelens-ai-analytics
-  #   env_file: .env
-  #   environment:
-  #     - REDIS_URL=${REDIS_URL}
-  #   depends_on:
-  #     - redis
-  #   networks:
-  #     - spacelens-net
-  #   restart: unless-stopped
+  ai-analytics:
+    build:
+      context: ./MODULE_AI/analytics_service
+      dockerfile: Dockerfile
+    container_name: ai-analytics-analytics
+    env_file: .env
+    environment:
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+    networks:
+      - spacelens-net
+    restart: unless-stopped 
 
 
   # module-fe:

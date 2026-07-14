@@ -2,7 +2,7 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-# Install system dependencies for OpenCV and GStreamer
+# Install system dependencies for OpenCV
 RUN apt-get update && apt-get install -y \
     libgl1 \
     libglib2.0-0 \
@@ -12,13 +12,14 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy source code
-COPY . .
-
-# Optimize models at build time: OSNet -> ONNX, YOLOv8 -> OpenVINO IR
-RUN python scripts/export_onnx.py && python scripts/export_yolo_openvino.py
+# Copy source code and pre-exported models
+COPY app/ ./app/
+COPY run.py .
+COPY weights/ ./weights/
 
 ENV RELOAD=false
+
+EXPOSE ${AI_PORT}
 
 # Run the tracking service
 CMD ["python", "run.py"]

@@ -17,15 +17,14 @@ class ByteTrackModel:
             fuse_score=True,
         )
 
-        frame_rate = bt_cfg.get("frame_rate", 30)
         tracker_args.track_buffer = bt_cfg.get("track_buffer", tracker_args.track_buffer)
+        frame_rate = bt_cfg.get("frame_rate", 30)
         tracker_args.frame_rate = frame_rate
 
         self.tracker = BYTETracker(args=tracker_args)
 
     def tracker_predict(self, yolo_results, frame: np.ndarray) -> list:
         boxes = yolo_results.boxes
-        # print(yolo_results)
         if boxes is None or len(boxes) == 0:
             return []
         raw = self.tracker.update(boxes, img=frame)
@@ -37,11 +36,9 @@ class ByteTrackModel:
 
 
 class _ByteTrackResult:
-   
+
     def __init__(self, row: np.ndarray):
         self._row = row
-        self.features = None       
-        self.final_track_id = None 
 
     @property
     def track_id(self) -> int:

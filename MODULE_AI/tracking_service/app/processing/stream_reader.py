@@ -1,7 +1,6 @@
 import threading
 import logging
 import time
-import os
 import cv2
 import numpy as np
 from collections import deque

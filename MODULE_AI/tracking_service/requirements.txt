@@ -5,15 +5,9 @@ pydantic-settings
 ultralytics
 torch
 torchvision
-torchreid
-scipy
-gdown
 opencv-python-headless>=4.8
 openvino
 pyyaml
 python-dotenv
 redis
 numpy
-tensorboard
-onnxscript
-onnx

@@ -1,0 +1,26 @@
+# __pycache__
+*.pyc
+*.pyo
+
+# Environment & secrets
+.env
+.env.*
+
+# IDE & tools
+.git
+.gitignore
+.mypy_cache
+.venv
+venv
+
+# Export scripts & build artifacts
+scripts/
+datasets/
+*.md
+
+# Large weights not needed at runtime
+weights/*.pt
+
+# Logs
+logs/
+*.log

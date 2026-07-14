@@ -1,11 +1,8 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, APIRouter, status, HTTPException
 from app.utils.exception_handle import global_exception_handler, http_exception_handler
-from app.utils.logging import setup_logging
 from app.startup import run_startup_checks
 from app.api.v1.tracking_router import router_tracking
-
-setup_logging()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
