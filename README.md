@@ -159,7 +159,7 @@ interactive Swagger UI at **`/docs`**.
 
 | Method | Endpoint | Description | Body / Query |
 |---|---|---|---|
-| `POST` | `/api/v1/tracking/process` | Start processing a stream (video file or RTSP) | `{ "url_rtsp": string, "camera_id"?: string, "location_id"?: string, "list_zone"?: [{zone_id, points}] }` |
+| `POST` | `/api/v1/tracking/process` | Start processing a stream (video file or RTSP) | `{ "url_rtsp": string, "camera_id"?: string, "location_id"?: string }` |
 | `GET` | `/api/v1/tracking/status` | Get status of one or all running streams | `?url_rtsp=` (omit to list all) |
 | `GET` | `/api/v1/tracking/stopped` | Stop a running stream | `?url_rtsp=` (required) |
 
