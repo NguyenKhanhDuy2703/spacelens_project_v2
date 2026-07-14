@@ -55,10 +55,10 @@ flowchart LR
 | `analytics_service` | Infers behavior from tracking events (Zone/Dwell/Heatmap) | Consumes Redis Streams (consumer group) | No HTTP exposure — pure worker |
 | `redis` | Message broker between the two services | Redis Streams | Port `6379` |
 
-Detailed diagrams: [diagram_ai_tracking.md](docs/diagram_ai_tracking.md) ·
-[diagram_ai_analysis.md](docs/diagram_ai_analysis.md) · Per-service docs:
-[tracking_service](MODULE_AI/tracking_service/README.md) ·
-[analytics_service](MODULE_AI/analytics_service/README.md)
+- 📊 **Detailed diagrams:** [tracking_service](docs/diagram_ai_tracking.md) ·
+  [analytics_service](docs/diagram_ai_analysis.md)
+- 📄 **Per-service docs:** [tracking_service](MODULE_AI/tracking_service/README.md) ·
+  [analytics_service](MODULE_AI/analytics_service/README.md)
 
 ## Core Features
 
