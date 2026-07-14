@@ -2,9 +2,9 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-# Install system dependencies for OpenCV and GStreamer
+# Install system dependencies for OpenCV
 RUN apt-get update && apt-get install -y \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
@@ -12,8 +12,14 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy source code
-COPY . .
+# Copy source code and pre-exported models
+COPY app/ ./app/
+COPY run.py .
+COPY weights/ ./weights/
+
+ENV RELOAD=false
+
+EXPOSE ${AI_PORT}
 
 # Run the tracking service
 CMD ["python", "run.py"]

@@ -1,13 +1,18 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, APIRouter, status, HTTPException
 from app.utils.exception_handle import global_exception_handler, http_exception_handler
-from app.utils.logging import setup_logging
+from app.startup import run_startup_checks
 from app.api.v1.tracking_router import router_tracking
 
-setup_logging()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    run_startup_checks()
+    yield
 
 app = FastAPI(
     title="AI Module API",
     description="API for AI Module",
+    lifespan=lifespan,
 )
 
 app.add_exception_handler(Exception, global_exception_handler)

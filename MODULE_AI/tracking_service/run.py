@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 def main():
     try:
-        config = uvicorn.Config("app.main:app", host="0.0.0.0", port=settings.AI_PORT, reload=True, log_config=None)
+        config = uvicorn.Config("app.main:app", host="0.0.0.0", port=settings.AI_PORT, reload=settings.RELOAD, log_config=None)
         server = uvicorn.Server(config)
         logger.info(f"Starting the Tracking Service server on port {settings.AI_PORT}...")
         server.run()

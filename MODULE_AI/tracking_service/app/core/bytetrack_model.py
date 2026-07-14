@@ -17,14 +17,14 @@ class ByteTrackModel:
             fuse_score=True,
         )
 
-        frame_rate = bt_cfg.get("frame_rate", 30)
         tracker_args.track_buffer = bt_cfg.get("track_buffer", tracker_args.track_buffer)
+        frame_rate = bt_cfg.get("frame_rate", 30)
+        tracker_args.frame_rate = frame_rate
 
-        self.tracker = BYTETracker(args=tracker_args, frame_rate=frame_rate)
+        self.tracker = BYTETracker(args=tracker_args)
 
     def tracker_predict(self, yolo_results, frame: np.ndarray) -> list:
         boxes = yolo_results.boxes
-
         if boxes is None or len(boxes) == 0:
             return []
         raw = self.tracker.update(boxes, img=frame)
@@ -36,11 +36,9 @@ class ByteTrackModel:
 
 
 class _ByteTrackResult:
-   
+
     def __init__(self, row: np.ndarray):
         self._row = row
-        self.features = None       
-        self.final_track_id = None 
 
     @property
     def track_id(self) -> int:
@@ -51,3 +49,32 @@ class _ByteTrackResult:
 
     def to_ltrb(self) -> list:
         return self._row[:4].tolist()
+
+    @property
+    def score(self) -> float:
+        return float(self._row[5]) if len(self._row) > 5 else 1.0
+
+    @property
+    def width(self) -> float:
+        return float(self._row[2] - self._row[0])
+
+    @property
+    def height(self) -> float:
+        return float(self._row[3] - self._row[1])
+
+    @property
+    def area(self) -> float:
+        return self.width * self.height
+
+    @property
+    def aspect_ratio(self) -> float:
+        h = self.height
+        return self.width / h if h > 0 else 0.0
+
+    def get_crop(self, frame: np.ndarray) -> np.ndarray:
+        x1, y1, x2, y2 = self.to_ltrb()
+        x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
+        h, w = frame.shape[:2]
+        x1, y1 = max(0, x1), max(0, y1)
+        x2, y2 = min(w, x2), min(h, y2)
+        return frame[y1:y2, x1:x2]

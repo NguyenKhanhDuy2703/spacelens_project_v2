@@ -1,6 +1,6 @@
 # Cấu hình cho module phát hiện YOLOv8
 yolov8:
-  model_path: weights\yolov8m_openvino_model
+  model_path: weights/yolov8m_openvino_model
   task: detect
   confidence_threshold: 0.4 # ngưỡng tin cậy
   iou_threshold: 0.45 
