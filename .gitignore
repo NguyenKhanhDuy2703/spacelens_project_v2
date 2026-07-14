@@ -40,13 +40,19 @@ coverage/
 uploads/
 storage/
 models/
-weights/
+**/weights/*
+!**/weights/yolov8m.pt
 *.sqlite
 *.sqlite3
 *.db
 
-# Large AI model artifacts
-*.pt
+# Large AI model artifacts (generated at Docker build time, not committed)
 *.bin
 *.xml
 *.onnx
+**/weights/yolov8m_openvino_model/
+
+# .temp
+.temps/
+skills-lock.json
+.agents/
