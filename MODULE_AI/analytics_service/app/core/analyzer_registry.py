@@ -12,12 +12,14 @@ class CameraAnalyzerRegistry:
         default_h: int,
         dwell_iou_threshold: float = 0.7,
         dwell_time_threshold_sec: float = 2.0,
+        ping_threshold :float = 10
     ):
         self._zone_provider = zone_provider
         self._default_w = default_w
         self._default_h = default_h
         self._dwell_iou_threshold = dwell_iou_threshold
         self._dwell_time_threshold_sec = dwell_time_threshold_sec
+        self._ping_threshold = ping_thresthold
         self._cameras: dict[str, dict] = {}
 
     def get_or_create(self, camera_id: str, frame_w: int | None = None, frame_h: int | None = None) -> dict:
@@ -29,6 +31,7 @@ class CameraAnalyzerRegistry:
                 "dwell": DwellTimeAnalysis(
                     iou_threshold=self._dwell_iou_threshold,
                     time_threshold=self._dwell_time_threshold_sec,
+                    ping_threshold=self._ping_threshold
                 ),
                 "heatmap": HeatmapAnalysis(fw, fh),
                 "zones_cache": self._zone_provider.get_zones(camera_id),
@@ -39,3 +42,6 @@ class CameraAnalyzerRegistry:
 
     def all_camera_ids(self) -> list[str]:
         return list(self._cameras.keys())
+    
+    def get_zones(self, camera_id: str) -> list[dict]:
+        return self._cameras[camera_id]["zones_cache"]

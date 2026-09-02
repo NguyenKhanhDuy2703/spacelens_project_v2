@@ -56,3 +56,5 @@ models/
 .temps/
 skills-lock.json
 .agents/
+.claude/
+my-skills-agents/

@@ -31,7 +31,7 @@ def build_dwell_events(camera_id: str, raw_events: list[dict]) -> list[DwellEven
     out = []
     for e in raw_events:
         out.append(DwellEventPayload(
-            event_type="dwell_stop",
+            event_type=e["event_type"],
             camera_id=camera_id,
             timestamp=e["timestamp"],
             track_id=e["track_id"],

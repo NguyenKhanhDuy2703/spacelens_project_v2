@@ -10,22 +10,26 @@ class EventDispatcher:
         producer: RedisProducer,
         zone_stream: str,
         dwell_stream: str,
+        dwell_ping_stream: str,
         heatmap_stream: str,
         heatmap_interval_sec: float,
     ):
         self._producer = producer
         self._zone_stream = zone_stream
         self._dwell_stream = dwell_stream
+        self._dwell_ping_stream = dwell_ping_stream
         self._heatmap_stream = heatmap_stream
         self._heatmap_interval_sec = heatmap_interval_sec
-        # key: (event_type, camera_id) -> last publish time (time.monotonic())
         self._last_sent: dict[tuple[str, str], float] = {}
 
     def dispatch(self, event) -> None:
         if isinstance(event, ZoneEventPayload):
             self._producer.publish(self._zone_stream, event.model_dump())
         elif isinstance(event, DwellEventPayload):
-            self._producer.publish(self._dwell_stream, event.model_dump())
+            if event.event_type == "dwell_ping":
+                self._producer.publish(self._dwell_ping_stream, event.model_dump())
+            else:
+                self._producer.publish(self._dwell_stream, event.model_dump())
         elif isinstance(event, HeatmapEventPayload):
             self._dispatch_heatmap(event)
         else:
