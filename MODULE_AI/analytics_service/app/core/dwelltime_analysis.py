@@ -2,7 +2,6 @@ import math
 import time
 from numba import jit
 import numpy as np
-from app.analytics.zone_analysis import ZoneAnalysis
 @jit(nopython=True)
 def calculate_iou(boxA, boxB):
 
@@ -21,9 +20,10 @@ def calculate_iou(boxA, boxB):
     return iou
 
 class DwellTimeAnalysis:
-    def __init__(self, iou_threshold=0.7 , time_threshold=2.0):
+    def __init__(self, iou_threshold=0.7 , time_threshold=2.0 , ping_threshold=10.0):
         self.iou_threshold = iou_threshold
         self.time_threshold = time_threshold
+        self.ping_threshold = ping_threshold
         self.dwell_times = {}
         self.finished_events = [] 
 
@@ -34,11 +34,11 @@ class DwellTimeAnalysis:
             
         event_stop_payload = {
             "track_id": track_id,
-            "event_type": "stop",
+            "event_type": "dwell_stop",
             "dwell_time": round(obj_dwell_time["dwell_time"], 2),
             "pos_x": int(obj_dwell_time["last_pos"][0]), 
             "pos_y": int(obj_dwell_time["last_pos"][1]),
-            "zone_id": obj_dwell_time.get("current_zone"),  # zone đúng của track này
+            "zone_id": obj_dwell_time.get("current_zone"), 
             "timestamp": time.time()
         }
         
@@ -79,32 +79,34 @@ class DwellTimeAnalysis:
 
     def alert_stopped_objects(self, track_id, zone_id=None):
         obj=self.dwell_times.get(track_id)
-        if not obj or obj["dwell_time"] < self.time_threshold:
+        if not obj or obj["dwell_time"] < self.ping_threshold:
             return None
         ping_payload = {
-            "event_type": "ping",
+            "event_type": "dwell_ping",
             "track_id": track_id,
-            "dwell_time": round(obj["dwell_time"], 2) if obj else 0.0,
-            "zone_id": zone_id,  # zone hiện tại của track — dùng để match rule
+            "dwell_time": round(obj["dwell_time"], 2),
+            "zone_id": zone_id,
+            "pos_x": int(obj["last_pos"][0]),
+            "pos_y": int(obj["last_pos"][1]),
+             "timestamp": time.time(),
         }
         return ping_payload
     def get_new_events(self):
         events = self.finished_events[:]
         self.finished_events = [] 
         return events
-    def cleanup_old_tracks(self , max_age = 300):
+    def cleanup_old_tracks(self, max_age=300, zone_analyzer=None):
         current_time = time.time()
         to_delete = []
-        for track_id , data in self.dwell_times.items():
+        for track_id, data in self.dwell_times.items():
             if current_time - data["last_update"] > max_age:
                 to_delete.append(track_id)
         for track_id in to_delete:
             del self.dwell_times[track_id]
-            ZoneAnalysis().cleanup_event_person_zone(track_id)
+            if zone_analyzer is not None:
+                zone_analyzer.cleanup_event_person_zone(track_id)
 
     def flush_all_active(self):
-        """Gọi finalize_stop_event cho tất cả track đang tích lũy dwell_time.
-        Dùng khi stream kết thúc để không mất data của người đứng yên đến cuối video."""
         for track_id in list(self.dwell_times.keys()):
             obj = self.dwell_times.get(track_id)
             if obj and obj["dwell_time"] >= self.time_threshold:

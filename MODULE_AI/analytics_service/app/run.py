@@ -26,6 +26,7 @@ def run_analytics():
         producer,
         zone_stream=settings.REDIS_ZONE_EVENT_STREAM,
         dwell_stream=settings.REDIS_DWELL_EVENT_STREAM,
+        dwell_ping_stream=settings.REDIS_DWELL_PING_STREAM,
         heatmap_stream=settings.REDIS_HEATMAP_STREAM,
         heatmap_interval_sec=settings.HEATMAP_PUBLISH_INTERVAL_SEC,
     )
@@ -36,6 +37,7 @@ def run_analytics():
         default_h=settings.DEFAULT_FRAME_HEIGHT,
         dwell_iou_threshold=settings.DWELL_IOU_THRESHOLD,
         dwell_time_threshold_sec=settings.DWELL_TIME_THRESHOLD_SEC,
+        ping_threshold=settings.DWELL_PING_ALERT_THRESHOLD_SEC,
     )
 
     logger.info(f"Analytics Service listening on Redis Stream: {settings.REDIS_INPUT_STREAM}")

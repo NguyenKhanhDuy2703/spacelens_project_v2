@@ -1,18 +1,40 @@
+import logging
+import time
+from typing import TypedDict
+
+from app.api.zone_client import fetch_zones
+from app.config import settings
+
+logger = logging.getLogger(__name__)
+
+
+class Zone(TypedDict):
+    zone_id: str
+    points: list[list[float]]
+
+
+class CacheEntry(TypedDict):
+    zones: list[Zone]
+    fetched_at: float
+
+
 class ZoneProvider:
-    """Nguồn zone tạm thời — hardcode.
+    def __init__(self):
+        self._cache: dict[str, CacheEntry] = {}
 
-    Interface get_zones(camera_id) giữ ổn định để sau này thay bằng HTTPZoneProvider
-    gọi MODULE_BE (domain camera/zone) mà KHÔNG cần đổi code gọi ở AnalyzerRegistry.
-    Xem .temps/zone_polygon_source_analysis.md và .temps/analytics_zone_fetch_design.md
-    cho quyết định kiến trúc dài hạn (BE-owns-zone qua Database).
-    """
+    def get_zones(self, camera_id: str) -> list[Zone]:
+        entry = self._cache.get(camera_id)
+        if entry is None or time.time() - entry["fetched_at"] > settings.ZONE_CACHE_TTL_SEC:
+            self._refresh(camera_id, stale_entry=entry)
+        return self._cache[camera_id]["zones"]
 
-    _HARDCODED_ZONES: dict[str, list[dict]] = {
-        "cam_01": [
-            {"zone_id": "entrance", "points": [[0.1, 0.1], [0.4, 0.1], [0.4, 0.5], [0.1, 0.5]]},
-            {"zone_id": "counter", "points": [[0.5, 0.3], [0.9, 0.3], [0.9, 0.8], [0.5, 0.8]]},
-        ],
-    }
-
-    def get_zones(self, camera_id: str) -> list[dict]:
-        return self._HARDCODED_ZONES.get(camera_id, [])
+    def _refresh(self, camera_id: str, stale_entry: CacheEntry | None) -> None:
+        try:
+            zones = fetch_zones(camera_id)
+            self._cache[camera_id] = {"zones": zones, "fetched_at": time.time()}
+        except Exception as e:
+            logger.error(f"Failed to refresh zones for {camera_id}: {e}")
+            if stale_entry is not None:
+                self._cache[camera_id] = {**stale_entry, "fetched_at": time.time()}
+            else:
+                self._cache[camera_id] = {"zones": [], "fetched_at": time.time()}

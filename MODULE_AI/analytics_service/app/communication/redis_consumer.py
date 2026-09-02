@@ -22,10 +22,10 @@ class RedisConsumer:
             pass  # Group probably already exists
 
     def read(self):
-        """Yield (message_id, raw_payload_bytes) for each pending message. Blocking read."""
         messages = self.redis_client.xreadgroup(
             self.group, self.consumer_name, {self.stream: ">"}, count=self.count, block=self.block_ms
         )
+        
         if not messages:
             return
         for _stream, message_list in messages:
