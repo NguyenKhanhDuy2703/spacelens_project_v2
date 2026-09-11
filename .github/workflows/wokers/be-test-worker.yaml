@@ -10,6 +10,7 @@ on:
         outputs:
             status:
                 description: " The status is complete of the Backend test"
+                value: ${{ jobs.backend-unit-test.result }}
 jobs:
     backend-unit-test:
         name: "Run Nest JS unit test"
