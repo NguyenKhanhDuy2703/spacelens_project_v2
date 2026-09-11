@@ -1,0 +1,34 @@
+name: test pipeline
+
+on:
+    push:
+        branches:
+            - "feat/**"
+            - "fix/**"
+            - "ci-cd"
+        paths:
+            - "MODULE_FE/**"
+            - "MODULE_BE/**"
+            - ".github/workflows/**"
+    pull_request:
+        branches:
+            - "dev"
+            - "staging"
+            - "main"
+        paths:
+            - "MODULE_FE/**"
+            - "MODULE_BE/**"
+            - ".github/workflows/**"
+
+jobs:
+    be-unit-tests:
+        name: "Backend Unit Test Worker"
+        uses: ./.github/workflows/wokers/be-test-worker.yaml
+        with:
+            node-version: "20"
+
+    fe-unit-tests:
+        name: "Frontend Unit Test Worker"
+        uses: ./.github/workflows/wokers/fe-test-worker.yaml
+        with:
+            node-version: "20"

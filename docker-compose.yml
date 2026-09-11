@@ -10,17 +10,6 @@ volumes:
 
 services:
 
-  # mongodb:
-  #   image: mongo:7.0
-  #   container_name: spacelens-mongodb
-  #   ports:
-  #     - "27017:27017"
-  #   volumes:
-  #     - mongodb-data:/data/db
-  #   networks:
-  #     - spacelens-net
-  #   restart: unless-stopped
-
   redis:
     image: redis:7.2-alpine
     container_name: spacelens-redis
@@ -32,33 +21,27 @@ services:
       - spacelens-net
     restart: unless-stopped
 
-  # module-be:
-  #   build:
-  #     context: ./MODULE_BE
-  #     dockerfile: Dockerfile
-  #   container_name: spacelens-be
-  #   env_file: .env
-  #   environment:
-  #     - NODE_ENV=${NODE_ENV}
-  #     - MONGODB_URI=${MONGODB_URI}
-  #     - REDIS_URL=${REDIS_URL}
-  #     - GATEWAY_PORT=${GATEWAY_PORT}
-  #     - AUTH_PORT=${AUTH_PORT}
-  #     - AUTH_JWT_SECRET=${AUTH_JWT_SECRET}
-  #     - AUTH_JWT_EXPIRES_IN=${AUTH_JWT_EXPIRES_IN}
-  #     - CAMERA_PORT=${CAMERA_PORT}
-  #     - ZONE_PORT=${ZONE_PORT}
-  #     - ANALYTICS_PORT=${ANALYTICS_PORT}
-  #     - ANALYTICS_WORKER_CONCURRENCY=${ANALYTICS_WORKER_CONCURRENCY}
-  #     - REPORT_PORT=${REPORT_PORT}
-  #   ports:
-  #     - "${GATEWAY_PORT}:${GATEWAY_PORT}"
-  #   depends_on:
-  #     - mongodb
-  #     - redis
-  #   networks:
-  #     - spacelens-net
-  #   restart: unless-stopped
+  module-be:
+    build:
+      context: ./MODULE_BE
+      dockerfile: Dockerfile
+    container_name: spacelens-be
+    env_file: .env
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=${PORT:-3000}
+      - MONGODB_URI=${MONGODB_URI}
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET}
+      - PREFIX_API=${PREFIX_API:-api/v1}
+      - SWAGGER_PATH=${SWAGGER_PATH:-docs}
+    ports:
+      - "${PORT:-3000}:${PORT:-3000}"
+    depends_on:
+      - redis
+    networks:
+      - spacelens-net
+    restart: unless-stopped
 
   ai-tracking:
     build:
@@ -94,18 +77,18 @@ services:
     restart: unless-stopped 
 
 
-  # module-fe:
-  #   build:
-  #     context: ./MODULE_FE
-  #     dockerfile: Dockerfile
-  #   container_name: spacelens-fe
-  #   env_file: .env
-  #   environment:
-  #     - VITE_API_BASE_URL=${VITE_API_BASE_URL}
-  #   ports:
-  #     - "${FE_PORT}:${FE_PORT}"
-  #   depends_on:
-  #     - module-be
-  #   networks:
-  #     - spacelens-net
-  #   restart: unless-stopped
+  module-fe:
+    build:
+      context: ./MODULE_FE
+      dockerfile: Dockerfile
+    container_name: spacelens-fe
+    env_file: ./MODULE_FE/.env
+    environment:
+      - VITE_API_BASE_URL=${VITE_API_BASE_URL}
+    ports:
+      - "${FE_PORT:-5173}:5173"
+    depends_on:
+      - module-be
+    networks:
+      - spacelens-net
+    restart: unless-stopped
