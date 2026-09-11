@@ -44,14 +44,14 @@ jobs:
     needs: [orchestrator-init]
     uses: ./.github/workflows/_be-test-worker.yml
     with:
-      node-version: "20"
+      node-version: "24"
 
   fe-unit-tests:
     name: "Frontend Unit Test Worker"
     needs: [orchestrator-init]
     uses: ./.github/workflows/_fe-test-worker.yml
     with:
-      node-version: "20"
+      node-version: "22"
 
   # ==========================================================
   # KHỐI 3: MAIN ORCHESTRATOR FINAL EVALUATION

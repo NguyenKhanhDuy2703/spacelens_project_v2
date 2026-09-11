@@ -6,7 +6,7 @@ on:
       node-version:
         description: "The version Node.js used for project"
         required: false
-        default: "20"
+        default: "24"
         type: string
     outputs:
       status:
