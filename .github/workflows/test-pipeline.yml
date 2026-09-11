@@ -23,27 +23,48 @@ on:
       - ".github/workflows/**"
 
 jobs:
+  # ==========================================================
+  # KHỐI 1: MAIN ORCHESTRATOR INIT
+  # ==========================================================
+  orchestrator-init:
+    name: "Main Orchestrator: Init"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Initialize Pipeline
+        run: |
+          echo "🚀 Khởi động SpaceLens Test Orchestrator Pipeline"
+          echo "Triggered by: ${{ github.actor }} on branch: ${{ github.ref_name }}"
+          echo "Commit SHA: ${{ github.sha }}"
+
+  # ==========================================================
+  # KHỐI 2: PARALLEL WORKERS (FE & BE)
+  # ==========================================================
   be-unit-tests:
     name: "Backend Unit Test Worker"
+    needs: [orchestrator-init]
     uses: ./.github/workflows/_be-test-worker.yml
     with:
       node-version: "20"
 
   fe-unit-tests:
     name: "Frontend Unit Test Worker"
+    needs: [orchestrator-init]
     uses: ./.github/workflows/_fe-test-worker.yml
     with:
       node-version: "20"
 
+  # ==========================================================
+  # KHỐI 3: MAIN ORCHESTRATOR FINAL EVALUATION
+  # ==========================================================
   quality-gate:
-    name: "Orchestrator Evaluation"
+    name: "Main Orchestrator: Quality Gate"
     needs: [be-unit-tests, fe-unit-tests]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Generate Pipeline Summary
         run: |
-          echo "### 🚀 SpaceLens Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "### 🚀 SpaceLens Pipeline Execution Summary" >> $GITHUB_STEP_SUMMARY
           echo "| Worker Target | Status |" >> $GITHUB_STEP_SUMMARY
           echo "| :--- | :---: |" >> $GITHUB_STEP_SUMMARY
           echo "| **Backend Unit Tests** | ${{ needs.be-unit-tests.result == 'success' && '🟢 PASS' || '🔴 FAIL' }} |" >> $GITHUB_STEP_SUMMARY
