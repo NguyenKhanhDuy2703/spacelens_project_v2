@@ -34,3 +34,25 @@ jobs:
     uses: ./.github/workflows/_fe-test-worker.yml
     with:
       node-version: "20"
+
+  quality-gate:
+    name: "Orchestrator Evaluation"
+    needs: [be-unit-tests, fe-unit-tests]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate Pipeline Summary
+        run: |
+          echo "### 🚀 SpaceLens Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| Worker Target | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "| :--- | :---: |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Backend Unit Tests** | ${{ needs.be-unit-tests.result == 'success' && '🟢 PASS' || '🔴 FAIL' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Frontend Unit Tests** | ${{ needs.fe-unit-tests.result == 'success' && '🟢 PASS' || '🔴 FAIL' }} |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Enforce Quality Gate
+        run: |
+          if [ "${{ needs.be-unit-tests.result }}" != "success" ] || [ "${{ needs.fe-unit-tests.result }}" != "success" ]; then
+            echo "::error::Một trong các worker kiểm thử đã thất bại!"
+            exit 1
+          fi
+          echo "::notice::Toàn bộ bài test đã vượt qua thành công!"
