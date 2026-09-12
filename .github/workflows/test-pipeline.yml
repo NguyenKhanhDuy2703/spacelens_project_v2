@@ -1,34 +1,79 @@
 name: test pipeline
 
 on:
-    push:
-        branches:
-            - "feat/**"
-            - "fix/**"
-            - "ci-cd"
-        paths:
-            - "MODULE_FE/**"
-            - "MODULE_BE/**"
-            - ".github/workflows/**"
-    pull_request:
-        branches:
-            - "dev"
-            - "staging"
-            - "main"
-        paths:
-            - "MODULE_FE/**"
-            - "MODULE_BE/**"
-            - ".github/workflows/**"
+  push:
+    branches:
+      - "feat/**"
+      - "fix/**"
+      - "ci-cd"
+      - "dev"
+      - "main"
+    paths:
+      - "MODULE_FE/**"
+      - "MODULE_BE/**"
+      - ".github/workflows/**"
+  pull_request:
+    branches:
+      - "dev"
+      - "staging"
+      - "main"
+    paths:
+      - "MODULE_FE/**"
+      - "MODULE_BE/**"
+      - ".github/workflows/**"
 
 jobs:
-    be-unit-tests:
-        name: "Backend Unit Test Worker"
-        uses: ./.github/workflows/wokers/be-test-worker.yaml
-        with:
-            node-version: "20"
+  # ==========================================================
+  # KHỐI 1: MAIN ORCHESTRATOR INIT
+  # ==========================================================
+  orchestrator-init:
+    name: "Main Orchestrator: Init"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Initialize Pipeline
+        run: |
+          echo "🚀 Khởi động SpaceLens Test Orchestrator Pipeline"
+          echo "Triggered by: ${{ github.actor }} on branch: ${{ github.ref_name }}"
+          echo "Commit SHA: ${{ github.sha }}"
 
-    fe-unit-tests:
-        name: "Frontend Unit Test Worker"
-        uses: ./.github/workflows/wokers/fe-test-worker.yaml
-        with:
-            node-version: "20"
+  # ==========================================================
+  # KHỐI 2: PARALLEL WORKERS (FE & BE)
+  # ==========================================================
+  be-unit-tests:
+    name: "Backend Unit Test Worker"
+    needs: [orchestrator-init]
+    uses: ./.github/workflows/_be-test-worker.yml
+    with:
+      node-version: "24"
+
+  fe-unit-tests:
+    name: "Frontend Unit Test Worker"
+    needs: [orchestrator-init]
+    uses: ./.github/workflows/_fe-test-worker.yml
+    with:
+      node-version: "22"
+
+  # ==========================================================
+  # KHỐI 3: MAIN ORCHESTRATOR FINAL EVALUATION
+  # ==========================================================
+  quality-gate:
+    name: "Main Orchestrator: Quality Gate"
+    needs: [be-unit-tests, fe-unit-tests]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate Pipeline Summary
+        run: |
+          echo "### 🚀 SpaceLens Pipeline Execution Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| Worker Target | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "| :--- | :---: |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Backend Unit Tests** | ${{ needs.be-unit-tests.result == 'success' && '🟢 PASS' || '🔴 FAIL' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Frontend Unit Tests** | ${{ needs.fe-unit-tests.result == 'success' && '🟢 PASS' || '🔴 FAIL' }} |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Enforce Quality Gate
+        run: |
+          if [ "${{ needs.be-unit-tests.result }}" != "success" ] || [ "${{ needs.fe-unit-tests.result }}" != "success" ]; then
+            echo "::error::Một trong các worker kiểm thử đã thất bại!"
+            exit 1
+          fi
+          echo "::notice::Toàn bộ bài test đã vượt qua thành công!"
