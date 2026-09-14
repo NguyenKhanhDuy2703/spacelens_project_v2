@@ -1,31 +1,20 @@
 name: test pipeline
-
 on:
-  push:
-    branches:
-      - "feat/**"
-      - "fix/**"
-      - "ci-cd"
-      - "dev"
-      - "main"
-    paths:
-      - "MODULE_FE/**"
-      - "MODULE_BE/**"
-      - ".github/workflows/**"
-  pull_request:
-    branches:
-      - "dev"
-      - "staging"
-      - "main"
-    paths:
-      - "MODULE_FE/**"
-      - "MODULE_BE/**"
-      - ".github/workflows/**"
+    workflow_call:
+        inputs:
+            node-version-be: 
+              type: string
+              required: true
+              default: "24"
+            node-version-fe: 
+              type: string
+              required: true
+              default: "22"
+        outputs:
+            test-status:
+              value: ${{ jobs.test-reporter.outputs.overall-status }}
 
 jobs:
-  # ==========================================================
-  # KHỐI 1: MAIN ORCHESTRATOR INIT
-  # ==========================================================
   orchestrator-init:
     name: "Main Orchestrator: Init"
     runs-on: ubuntu-latest
@@ -35,10 +24,6 @@ jobs:
           echo "🚀 Khởi động SpaceLens Test Orchestrator Pipeline"
           echo "Triggered by: ${{ github.actor }} on branch: ${{ github.ref_name }}"
           echo "Commit SHA: ${{ github.sha }}"
-
-  # ==========================================================
-  # KHỐI 2: PARALLEL WORKERS (FE & BE)
-  # ==========================================================
   be-unit-tests:
     name: "Backend Unit Test Worker"
     needs: [orchestrator-init]
@@ -52,28 +37,23 @@ jobs:
     uses: ./.github/workflows/_fe-test-worker.yml
     with:
       node-version: "22"
-
-  # ==========================================================
-  # KHỐI 3: MAIN ORCHESTRATOR FINAL EVALUATION
-  # ==========================================================
-  quality-gate:
-    name: "Main Orchestrator: Quality Gate"
+  test-reporter:
+    name: "test reporter"
     needs: [be-unit-tests, fe-unit-tests]
-    if: always()
     runs-on: ubuntu-latest
+    if: always()
+    outputs:
+      overall-status: ${{ steps.test_report.outputs.overall-status }}
     steps:
-      - name: Generate Pipeline Summary
+      - name: "test report"
+        id: test_report
         run: |
-          echo "### 🚀 SpaceLens Pipeline Execution Summary" >> $GITHUB_STEP_SUMMARY
-          echo "| Worker Target | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "| :--- | :---: |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Backend Unit Tests** | ${{ needs.be-unit-tests.result == 'success' && '🟢 PASS' || '🔴 FAIL' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Frontend Unit Tests** | ${{ needs.fe-unit-tests.result == 'success' && '🟢 PASS' || '🔴 FAIL' }} |" >> $GITHUB_STEP_SUMMARY
-
-      - name: Enforce Quality Gate
-        run: |
-          if [ "${{ needs.be-unit-tests.result }}" != "success" ] || [ "${{ needs.fe-unit-tests.result }}" != "success" ]; then
-            echo "::error::Một trong các worker kiểm thử đã thất bại!"
+          if [ "${{ needs.be-unit-tests.result }}" = "success" ] && [ "${{ needs.fe-unit-tests.result }}" = "success" ]; then
+            echo "::notice::All unit test is success!"
+            echo "overall-status=success" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::Unit test is failure!"
+            echo "overall-status=failure" >> "$GITHUB_OUTPUT"
             exit 1
           fi
-          echo "::notice::Toàn bộ bài test đã vượt qua thành công!"
+   
