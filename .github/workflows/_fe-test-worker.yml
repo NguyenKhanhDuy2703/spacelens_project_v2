@@ -36,5 +36,8 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
+      - name: Frontend Type Check (Static Analysis)
+        run: npx tsc --noEmit
+
       - name: Run Frontend Tests
         run: npm test
