@@ -1,0 +1,59 @@
+version: '3.9'
+name: spacelens-e2e
+
+networks:
+  spacelens-net:
+    driver: bridge
+
+services:
+  # 1. Redis Cache
+  redis:
+    image: redis:7.2-alpine
+    container_name: spacelens-e2e-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - spacelens-net
+
+  # 2. Database MongoDB
+  mongodb:
+    image: mongo:7.0
+    container_name: spacelens-e2e-mongo
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=spacelens_e2e
+    networks:
+      - spacelens-net
+
+  # 3. Backend Service (Dùng chính Docker Image Staging vừa đóng gói)
+  module-be:
+    image: ${REGISTRY_PREFIX:-spacelens}/spacelens-be:${IMAGE_TAG:-staging}
+    container_name: spacelens-e2e-be
+    environment:
+      - NODE_ENV=test
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongodb:27017/spacelens_e2e
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=test_e2e_jwt_secret_key_123456789
+      - PREFIX_API=api/v1
+    ports:
+      - "3000:3000"
+    depends_on:
+      - redis
+      - mongodb
+    networks:
+      - spacelens-net
+
+  # 4. Frontend Service (Dùng chính Docker Image Staging vừa đóng gói)
+  module-fe:
+    image: ${REGISTRY_PREFIX:-spacelens}/spacelens-fe:${IMAGE_TAG:-staging}
+    container_name: spacelens-e2e-fe
+    environment:
+      - VITE_API_BASE_URL=http://localhost:3000
+    ports:
+      - "5173:5173"
+    depends_on:
+      - module-be
+    networks:
+      - spacelens-net

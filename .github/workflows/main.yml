@@ -1,0 +1,167 @@
+name: SpaceLens Unified CI/CD Pipeline
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: ["main", "dev", "staging", "feat/**", "ci-cd", "fix/**"]
+    paths:
+      - "MODULE_BE/**"
+      - "MODULE_FE/**"
+      - "MODULE_AI/**"
+      - ".github/workflows/**"
+  push:
+    branches: ["main", "dev", "staging", "ci-cd"]
+    paths:
+      - "MODULE_BE/**"
+      - "MODULE_FE/**"
+      - "MODULE_AI/**"
+      - ".github/workflows/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+ 
+  detect-changes:
+    name: "Detect Modified Services"
+    runs-on: ubuntu-latest
+    outputs:
+      be: ${{ steps.filter.outputs.be }}
+      fe: ${{ steps.filter.outputs.fe }}
+      ai-analytics: ${{ steps.filter.outputs.ai-analytics }}
+      ai-tracking: ${{ steps.filter.outputs.ai-tracking }}
+      workflows: ${{ steps.filter.outputs.workflows }}
+      short-sha: ${{ steps.vars.outputs.short-sha }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set Short SHA
+        id: vars
+        run: echo "short-sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Paths Filter
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            be:
+              - 'MODULE_BE/**'
+            fe:
+              - 'MODULE_FE/**'
+            ai-analytics:
+              - 'MODULE_AI/analytics_service/**'
+            ai-tracking:
+              - 'MODULE_AI/tracking_service/**'
+            workflows:
+              - '.github/workflows/**'
+  test-be:
+    name: "Backend Unit Test"
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.be == 'true'
+    uses: ./.github/workflows/_be-test-worker.yml
+    with:
+      node-version: "24"
+
+  test-fe:
+    name: "Frontend Unit Test"
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.fe == 'true'
+    uses: ./.github/workflows/_fe-test-worker.yml
+    with:
+      node-version: "22"
+
+  build-be:
+    name: "Build & Push BE Docker"
+    needs: [detect-changes, test-be]
+    if: (github.ref != 'refs/heads/main' && github.ref != 'refs/heads/staging') && needs.detect-changes.outputs.be == 'true'
+    uses: ./.github/workflows/_build-worker.yml
+    with:
+      service-name: "spacelens-be"
+      service-path: "MODULE_BE"
+      dockerfile: "Dockerfile"
+      language: "node"
+      push-image: ${{ github.event_name == 'push' && github.ref == 'refs/heads/dev' }}
+    secrets: inherit
+
+  build-fe:
+    name: "Build & Push FE Docker"
+    needs: [detect-changes, test-fe]
+    if: (github.ref != 'refs/heads/main' && github.ref != 'refs/heads/staging') && needs.detect-changes.outputs.fe == 'true'
+    uses: ./.github/workflows/_build-worker.yml
+    with:
+      service-name: "spacelens-fe"
+      service-path: "MODULE_FE"
+      dockerfile: "Dockerfile"
+      language: "node"
+      push-image: ${{ github.event_name == 'push' && github.ref == 'refs/heads/dev' }}
+    secrets: inherit
+
+  build-ai-analytics:
+    name: "Build & Push AI Analytics Docker"
+    needs: [detect-changes]
+    if: (github.ref != 'refs/heads/main' && github.ref != 'refs/heads/staging') && needs.detect-changes.outputs.ai-analytics == 'true'
+    uses: ./.github/workflows/_build-worker.yml
+    with:
+      service-name: "spacelens-ai-analytics"
+      service-path: "MODULE_AI/analytics_service"
+      dockerfile: "Dockerfile"
+      language: "python"
+      push-image: ${{ github.event_name == 'push' && github.ref == 'refs/heads/dev' }}
+    secrets: inherit
+
+  build-ai-tracking:
+    name: "Build & Push AI Tracking Docker"
+    needs: [detect-changes]
+    if: (github.ref != 'refs/heads/main' && github.ref != 'refs/heads/staging') && needs.detect-changes.outputs.ai-tracking == 'true'
+    uses: ./.github/workflows/_build-worker.yml
+    with:
+      service-name: "spacelens-ai-tracking"
+      service-path: "MODULE_AI/tracking_service"
+      dockerfile: "Dockerfile"
+      language: "python"
+      push-image: ${{ github.event_name == 'push' && github.ref == 'refs/heads/dev' }}
+    secrets: inherit
+  
+  scan-images:
+    name: "Scan Docker Images (Staging Security Gate)"
+    needs: [detect-changes]
+    if: |
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+    uses: ./.github/workflows/_trivy-scan-worker.yml
+    with:
+      image-tag: ${{ needs.detect-changes.outputs.short-sha }}
+      services: '["spacelens-be", "spacelens-fe", "spacelens-ai-analytics", "spacelens-ai-tracking"]'
+    secrets: inherit
+
+  deploy-staging:
+    name: "Promote & Deploy to Staging"
+    needs: [detect-changes, scan-images]
+    uses: ./.github/workflows/_promote-worker.yml
+    with:
+      source-tag: ${{ needs.detect-changes.outputs.short-sha }}
+      target-tag: "staging"
+      environment: "staging"
+    secrets: inherit
+
+  e2e-staging-test:
+    name: "E2E Playwright Gate (Staging)"
+    needs: [detect-changes, deploy-staging]
+    uses: ./.github/workflows/_e2e-test-worker.yml
+    with:
+      image-tag: ${{ needs.detect-changes.outputs.short-sha }}
+    secrets: inherit
+    
+  deploy-production:
+    name: "Promote & Deploy to Production"
+    needs: [detect-changes, e2e-staging-test]
+    uses: ./.github/workflows/_promote-worker.yml
+    with:
+      source-tag: ${{ needs.detect-changes.outputs.short-sha }}
+      target-tag: "latest"
+      environment: "production"
+    secrets: inherit
+
+

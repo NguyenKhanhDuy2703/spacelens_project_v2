@@ -19,7 +19,7 @@ class CameraAnalyzerRegistry:
         self._default_h = default_h
         self._dwell_iou_threshold = dwell_iou_threshold
         self._dwell_time_threshold_sec = dwell_time_threshold_sec
-        self._ping_threshold = ping_thresthold
+        self._ping_threshold = ping_threshold
         self._cameras: dict[str, dict] = {}
 
     def get_or_create(self, camera_id: str, frame_w: int | None = None, frame_h: int | None = None) -> dict:
