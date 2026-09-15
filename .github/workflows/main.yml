@@ -59,7 +59,7 @@ jobs:
   test-be:
     name: "Backend Unit Test"
     needs: [detect-changes]
-    if: needs.detect-changes.outputs.be == 'true' || needs.detect-changes.outputs.workflows == 'true'
+    if: needs.detect-changes.outputs.be == 'true'
     uses: ./.github/workflows/_be-test-worker.yml
     with:
       node-version: "24"
@@ -67,7 +67,7 @@ jobs:
   test-fe:
     name: "Frontend Unit Test"
     needs: [detect-changes]
-    if: needs.detect-changes.outputs.fe == 'true' || needs.detect-changes.outputs.workflows == 'true'
+    if: needs.detect-changes.outputs.fe == 'true'
     uses: ./.github/workflows/_fe-test-worker.yml
     with:
       node-version: "22"
@@ -75,7 +75,7 @@ jobs:
   build-be:
     name: "Build & Push BE Docker"
     needs: [detect-changes, test-be]
-    if: (github.ref != 'refs/heads/main' && github.ref != 'refs/heads/staging') && (needs.detect-changes.outputs.be == 'true' || needs.detect-changes.outputs.workflows == 'true')
+    if: (github.ref != 'refs/heads/main' && github.ref != 'refs/heads/staging') && needs.detect-changes.outputs.be == 'true'
     uses: ./.github/workflows/_build-worker.yml
     with:
       service-name: "spacelens-be"
@@ -88,7 +88,7 @@ jobs:
   build-fe:
     name: "Build & Push FE Docker"
     needs: [detect-changes, test-fe]
-    if: (github.ref != 'refs/heads/main' && github.ref != 'refs/heads/staging') && (needs.detect-changes.outputs.fe == 'true' || needs.detect-changes.outputs.workflows == 'true')
+    if: (github.ref != 'refs/heads/main' && github.ref != 'refs/heads/staging') && needs.detect-changes.outputs.fe == 'true'
     uses: ./.github/workflows/_build-worker.yml
     with:
       service-name: "spacelens-fe"
@@ -101,7 +101,7 @@ jobs:
   build-ai-analytics:
     name: "Build & Push AI Analytics Docker"
     needs: [detect-changes]
-    if: (github.ref != 'refs/heads/main' && github.ref != 'refs/heads/staging') && (needs.detect-changes.outputs.ai-analytics == 'true' || needs.detect-changes.outputs.workflows == 'true')
+    if: (github.ref != 'refs/heads/main' && github.ref != 'refs/heads/staging') && needs.detect-changes.outputs.ai-analytics == 'true'
     uses: ./.github/workflows/_build-worker.yml
     with:
       service-name: "spacelens-ai-analytics"
@@ -114,7 +114,7 @@ jobs:
   build-ai-tracking:
     name: "Build & Push AI Tracking Docker"
     needs: [detect-changes]
-    if: (github.ref != 'refs/heads/main' && github.ref != 'refs/heads/staging') && (needs.detect-changes.outputs.ai-tracking == 'true' || needs.detect-changes.outputs.workflows == 'true')
+    if: (github.ref != 'refs/heads/main' && github.ref != 'refs/heads/staging') && needs.detect-changes.outputs.ai-tracking == 'true'
     uses: ./.github/workflows/_build-worker.yml
     with:
       service-name: "spacelens-ai-tracking"

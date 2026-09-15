@@ -15,11 +15,14 @@ describe('Frontend Redux: cameraSlice Business Logic Tests', () => {
     _id: 'cam-1',
     name: 'Gate Entrance 1',
     camera_code: 'CAM_GATE_01',
-    rtsp_url: 'rtsp://192.168.1.10:554/live',
+    stream_source_type: 'RTSP',
+    url_rtsp: 'rtsp://192.168.1.10:554/live',
+    codec: 'H264',
+    orientation: 'WALL',
     status: 'STREAMING',
     is_active: true,
     location_id: 'Zone A',
-    resolution: '1080p',
+    resolution: { width: 1920, height: 1080 },
     fps: 30,
     created_at: '2026-09-11T00:00:00.000Z',
     updated_at: '2026-09-11T00:00:00.000Z',
@@ -29,11 +32,14 @@ describe('Frontend Redux: cameraSlice Business Logic Tests', () => {
     _id: 'cam-2',
     name: 'Parking Lot B',
     camera_code: 'CAM_PARK_02',
-    rtsp_url: 'rtsp://192.168.1.11:554/live',
+    stream_source_type: 'RTSP',
+    url_rtsp: 'rtsp://192.168.1.11:554/live',
+    codec: 'H264',
+    orientation: 'CEILING',
     status: 'INACTIVE',
     is_active: false,
     location_id: 'Zone B',
-    resolution: '4K',
+    resolution: { width: 3840, height: 2160 },
     fps: 60,
     created_at: '2026-09-11T00:00:00.000Z',
     updated_at: '2026-09-11T00:00:00.000Z',
@@ -79,12 +85,12 @@ describe('Frontend Redux: cameraSlice Business Logic Tests', () => {
     const updatedCamera1: Camera = {
       ...mockCamera1,
       name: 'Gate Entrance 1 - Renovated',
-      status: 'AI_ACTIVE',
+      status: 'READY',
     };
 
     const nextState = cameraSlice.reducer(prevState, optimisticUpdateCamera(updatedCamera1));
     expect(nextState.items[0].name).toBe('Gate Entrance 1 - Renovated');
-    expect(nextState.items[0].status).toBe('AI_ACTIVE');
+    expect(nextState.items[0].status).toBe('READY');
     expect(nextState.selectedCamera?.name).toBe('Gate Entrance 1 - Renovated');
   });
 
