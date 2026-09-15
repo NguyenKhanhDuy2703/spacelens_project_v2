@@ -6,10 +6,6 @@ class ZoneAnalysis:
         self.status_person_run = {}
 
     def _to_pixel_points(self, points, frame_w: int, frame_h: int):
-        """Convert points to absolute pixel coords.
-        If all values are in [0, 1] → treat as normalized ratios and scale up.
-        Otherwise → already absolute pixels, cast to int.
-        """
         if not points:
             return points
         flat = [v for pair in points for v in pair]
