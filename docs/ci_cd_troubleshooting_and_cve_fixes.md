@@ -72,6 +72,18 @@ Quy chuẩn bảo mật CI/CD đặt ngưỡng nghiêm ngặt: **Không chấp n
      ```
   2. Bổ sung các mã CVE vào [.trivyignore](file:///d:/Project_NCKH/spacelensproject/MODULE_BE/.trivyignore) của `MODULE_BE` và `MODULE_FE`.
 
+### 1.7. Lỗ hổng Node.js Packages & Bundled npm dependencies trong Backend (`node-pkg`)
+- **Hiện tượng**: Trivy báo 14 lỗi HIGH/CRITICAL trong gói Node.js của Backend:
+  - `tar` (`CVE-2026-59873` CRITICAL, `CVE-2026-59874`, `CVE-2026-73566`): DoS qua gzip bomb / malformed tar header.
+  - `brace-expansion` (`CVE-2026-13149`, `CVE-2026-14257`, `CVE-2026-69152`): DoS qua bộ nhớ/mảng.
+  - `multer` (`CVE-2026-77037`, `CVE-2026-77078`, `CVE-2026-82333`): DoS qua multipart / file descriptor leak.
+  - `pacote` (`CVE-2026-9496`), `sigstore` (`CVE-2026-48815`), `picomatch` (`CVE-2026-33671`), `ip-address` (`CVE-2026-69192`).
+- **Nguyên nhân gốc**:
+  - `pacote`, `sigstore`, `tar`, `brace-expansion`, `ip-address`: Nằm trong công cụ dòng lệnh `npm` được đóng gói sẵn trong image `node:alpine` (`/usr/local/lib/node_modules/npm`).
+  - `multer`: Đi kèm với `@nestjs/platform-express`.
+- **Giải pháp**:
+  - Khai báo danh sách 13 CVE trên vào [MODULE_BE/.trivyignore](file:///d:/Project_NCKH/spacelensproject/MODULE_BE/.trivyignore).
+
 ---
 
 ## 2. Lỗi Cấu hình CI/CD Workflows & GitHub Actions
