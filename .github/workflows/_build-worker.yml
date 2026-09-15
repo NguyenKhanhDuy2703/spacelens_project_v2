@@ -92,12 +92,13 @@ jobs:
           cache-from: type=gha,scope=${{ inputs.service-name }}-${{ inputs.language }}
           cache-to: type=gha,mode=max,scope=${{ inputs.service-name }}-${{ inputs.language }}
 
-      - name: Ensure .trivyignore exists
+      - name: Prepare .trivyignore for scan
         run: |
-          if [ ! -f "${{ inputs.service-path }}/.trivyignore" ]; then
-            touch "${{ inputs.service-path }}/.trivyignore"
-            echo "Created empty .trivyignore for ${{ inputs.service-path }}"
+          if [ -f "${{ inputs.service-path }}/.trivyignore" ]; then
+            cat "${{ inputs.service-path }}/.trivyignore" >> .trivyignore
           fi
+          echo "Active .trivyignore entries for ${{ inputs.service-name }}:"
+          cat .trivyignore
 
       - name: Run Trivy Vulnerability Scan(critial & high)
         uses: aquasecurity/trivy-action@master
@@ -107,7 +108,7 @@ jobs:
           severity: CRITICAL,HIGH
           exit-code: "1"
           ignore-unfixed: true
-          trivyignores: ${{ inputs.service-path }}/.trivyignore  # white list CVVE
+          trivyignores: .trivyignore
 
       - name: push docker image to registry
         if : inputs.push-image && steps.auth-check.outputs.has_auth == 'true'
