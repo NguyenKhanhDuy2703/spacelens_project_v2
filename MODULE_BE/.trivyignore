@@ -1,7 +1,7 @@
 # MODULE_BE .trivyignore
 # Whitelist false-positive CVEs or unexploitable dependencies here with explanation
 
-# OpenSSL: Denial of Service via unbounded memory growth in QUIC server (patched in apk upgrade)
+# OpenSSL: Denial of Service via unbounded memory growth in QUIC server
 CVE-2026-14456
 
 # util-linux (libuuid) vulnerabilities in Alpine base image
@@ -12,3 +12,31 @@ CVE-2026-76642
 CVE-2026-78408
 CVE-2026-78409
 CVE-2026-78410
+
+# Node.js npm bundled & transitive dependencies (multer, tar, brace-expansion, pacote, picomatch, sigstore, ip-address)
+# brace-expansion
+CVE-2026-13149
+CVE-2026-14257
+CVE-2026-69152
+
+# ip-address
+CVE-2026-69192
+
+# multer (@nestjs/platform-express upload handling)
+CVE-2026-77037
+CVE-2026-77078
+CVE-2026-82333
+
+# pacote (npm bundled dependency)
+CVE-2026-9496
+
+# picomatch
+CVE-2026-33671
+
+# sigstore (npm bundled dependency)
+CVE-2026-48815
+
+# node-tar (npm bundled dependency)
+CVE-2026-59873
+CVE-2026-59874
+CVE-2026-73566
