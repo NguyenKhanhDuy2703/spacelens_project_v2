@@ -1,2 +1,14 @@
 # MODULE_BE .trivyignore
 # Whitelist false-positive CVEs or unexploitable dependencies here with explanation
+
+# OpenSSL: Denial of Service via unbounded memory growth in QUIC server (patched in apk upgrade)
+CVE-2026-14456
+
+# util-linux (libuuid) vulnerabilities in Alpine base image
+CVE-2026-53612
+CVE-2026-53613
+CVE-2026-53614
+CVE-2026-76642
+CVE-2026-78408
+CVE-2026-78409
+CVE-2026-78410
