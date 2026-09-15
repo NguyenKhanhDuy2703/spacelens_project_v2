@@ -1,32 +1,32 @@
 # Stage 1: Build NestJS application
-FROM node:24-alpine AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Copy package descriptors
-COPY package*.json ./
+# Upgrade OS packages to patch known Alpine CVEs
+RUN apk update && apk upgrade --no-cache
 
-# Install all dependencies (including devDependencies for build)
+COPY package*.json ./
 RUN npm ci
 
-# Copy source code and build
 COPY . .
 RUN npm run build
 
 # Stage 2: Production runtime
-FROM node:24-alpine AS runner
+FROM node:22-alpine AS runner
 
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Copy package descriptors and install only production dependencies
+# Upgrade OS packages to patch known Alpine CVEs (libcrypto3, libssl3, libuuid)
+RUN apk update && apk upgrade --no-cache
+
 COPY package*.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 
-# Copy compiled files from builder stage
 COPY --from=builder /app/dist ./dist
 
 EXPOSE 3000
 
-CMD ["node", "dist/main"]
+CMD ["node", "dist/main.js"]
