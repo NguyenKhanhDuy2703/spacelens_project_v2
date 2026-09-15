@@ -1,0 +1,9 @@
+# False positive: msgpack 1.1.2 is vendored internally inside pip._vendor, not used by application
+GHSA-6v7p-g79w-8964
+
+# Base image bootstrap: setuptools 70.3.0 is bundled in Python standard library ensurepip, upgraded in runtime
+CVE-2025-47273
+
+# Vendored metadata in setuptools / pip: jaraco.context and wheel
+CVE-2026-23949
+CVE-2026-24049
