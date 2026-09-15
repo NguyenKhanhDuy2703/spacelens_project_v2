@@ -1,0 +1,4 @@
+# GHSA-6v7p-g79w-8964: msgpack 1.1.2 is vendored internally inside pip/_vendor, not used by app
+GHSA-6v7p-g79w-8964
+# CVE-2025-47273: setuptools 70.3.0 is bundled in base image ensurepip, upgraded in runtime
+CVE-2025-47273
