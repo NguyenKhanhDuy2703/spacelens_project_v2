@@ -1,0 +1,2 @@
+# MODULE_BE .trivyignore
+# Whitelist false-positive CVEs or unexploitable dependencies here with explanation
