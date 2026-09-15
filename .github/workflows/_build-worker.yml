@@ -92,6 +92,13 @@ jobs:
           cache-from: type=gha,scope=${{ inputs.service-name }}-${{ inputs.language }}
           cache-to: type=gha,mode=max,scope=${{ inputs.service-name }}-${{ inputs.language }}
 
+      - name: Ensure .trivyignore exists
+        run: |
+          if [ ! -f "${{ inputs.service-path }}/.trivyignore" ]; then
+            touch "${{ inputs.service-path }}/.trivyignore"
+            echo "Created empty .trivyignore for ${{ inputs.service-path }}"
+          fi
+
       - name: Run Trivy Vulnerability Scan(critial & high)
         uses: aquasecurity/trivy-action@master
         with: 
