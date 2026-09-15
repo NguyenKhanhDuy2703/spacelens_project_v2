@@ -3,6 +3,9 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
+# Upgrade Alpine OS packages to patch known CVEs
+RUN apk update && apk upgrade --no-cache
+
 COPY package*.json ./
 RUN npm ci
 
@@ -11,6 +14,9 @@ RUN npm run build
 
 # Stage 2: Production Nginx Server
 FROM nginx:alpine AS runner
+
+# Upgrade Alpine OS packages to patch known CVEs (libcrypto3, libssl3, libuuid)
+RUN apk update && apk upgrade --no-cache
 
 COPY --from=builder /app/dist /usr/share/nginx/html
 
