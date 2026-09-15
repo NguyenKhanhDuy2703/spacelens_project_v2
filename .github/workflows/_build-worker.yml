@@ -100,6 +100,8 @@ jobs:
           severity: CRITICAL,HIGH
           exit-code: "1"
           ignore-unfixed: true
+          trivyignores: ${{ inputs.service-path }}/.trivyignore  # white list CVVE
+
       - name: push docker image to registry
         if : inputs.push-image && steps.auth-check.outputs.has_auth == 'true'
         run: |

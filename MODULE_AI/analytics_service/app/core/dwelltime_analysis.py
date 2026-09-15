@@ -1,8 +1,8 @@
 import math
 import time
-from numba import jit
 import numpy as np
-@jit(nopython=True)
+
+
 def calculate_iou(boxA, boxB):
 
     xA = max(boxA[0], boxB[0])
