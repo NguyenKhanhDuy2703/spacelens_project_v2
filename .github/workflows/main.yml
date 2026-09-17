@@ -39,7 +39,13 @@ jobs:
 
       - name: Set Short SHA
         id: vars
-        run: echo "short-sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            COMMIT_SHA="${{ github.event.pull_request.head.sha }}"
+          else
+            COMMIT_SHA="${{ github.sha }}"
+          fi
+          echo "short-sha=$(echo $COMMIT_SHA | cut -c1-7)" >> "$GITHUB_OUTPUT"
 
       - name: Paths Filter
         id: filter
@@ -128,8 +134,8 @@ jobs:
     name: "Scan Docker Images (Staging Security Gate)"
     needs: [detect-changes]
     if: |
-      github.event_name == 'push' &&
-      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+      (github.event_name == 'pull_request' && (github.base_ref == 'main' || github.base_ref == 'staging')) ||
+      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging'))
     uses: ./.github/workflows/_trivy-scan-worker.yml
     with:
       image-tag: ${{ needs.detect-changes.outputs.short-sha }}
@@ -157,6 +163,7 @@ jobs:
   deploy-production:
     name: "Promote & Deploy to Production"
     needs: [detect-changes, e2e-staging-test]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     uses: ./.github/workflows/_promote-worker.yml
     with:
       source-tag: ${{ needs.detect-changes.outputs.short-sha }}
