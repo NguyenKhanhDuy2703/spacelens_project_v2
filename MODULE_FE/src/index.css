@@ -1,5 +1,21 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #ECEDEE;
+  --color-secondary: #9CA3AF;
+  --color-tertiary: #B4FF39;
+  --color-neutral: #0E1013;
+  --color-surface: #17191C;
+  --color-surface-hover: #1F2226;
+  --color-border: #26292E;
+  --color-border-hover: #3E434B;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-display: 'Inter Tight', sans-serif;
+  --font-body: 'Inter', sans-serif;
+}
+
 /* ==========================================================================
-   GRAPHITE DESIGN SYSTEM — VANILLA CSS
+   GRAPHITE DESIGN SYSTEM — VANILLA CSS + TAILWIND UTILITIES
    Design specification: design.md (Cool greys, one lime signal)
    ========================================================================== */
 
@@ -31,21 +47,17 @@
   --shadow-modal: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
 }
 
-/* Reset & Base */
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  background-color: var(--color-neutral);
-  color: var(--color-primary);
-  font-family: var(--font-body);
-  font-size: 0.95rem;
-  line-height: 1.55;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* Reset & Base handled by Tailwind @layer base */
+@layer base {
+  body {
+    background-color: var(--color-neutral);
+    color: var(--color-primary);
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 }
 
 /* Typography */
