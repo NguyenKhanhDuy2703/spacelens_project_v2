@@ -34,7 +34,7 @@ test.describe('SpaceLens Staging Environment: E2E Smoke & Health Check', () => {
 
     // 5. Chuyển sang Tab "SETTINGS"
     await page.click('button:has-text("SETTINGS")');
-    await expect(page.getByText('SYSTEM SETTINGS')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'SYSTEM SETTINGS' })).toBeVisible();
   });
 
   test('TC03: Verify Camera Management Studio core layout', async ({ page }) => {
