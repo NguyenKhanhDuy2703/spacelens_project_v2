@@ -47,6 +47,12 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
+        id: buildx
+        continue-on-error: true
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Retry Set up Docker Buildx if failed
+        if: steps.buildx.outcome == 'failure'
         uses: docker/setup-buildx-action@v3
 
       - name: Determine Docker Hub Credentials
@@ -74,7 +80,9 @@ jobs:
             REGISTRY_PREFIX="spacelens"
           fi
           IMAGE_TAG="${REGISTRY_PREFIX}/${{ inputs.service-name }}:${SHORT_SHA}"
+          ENV_TAG="${REGISTRY_PREFIX}/${{ inputs.service-name }}:dev"
           echo "image-tag=${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
+          echo "env-tag=${ENV_TAG}" >> "$GITHUB_OUTPUT"
           echo "short-sha=${SHORT_SHA}" >> "$GITHUB_OUTPUT"
 
       - name: Build and Push Docker Image
@@ -84,7 +92,9 @@ jobs:
           file: ${{ inputs.service-path }}/${{ inputs.dockerfile }}
           push: false
           load: true
-          tags: ${{ steps.meta.outputs.image-tag }}
+          tags: |
+            ${{ steps.meta.outputs.image-tag }}
+            ${{ steps.meta.outputs.env-tag }}
           labels: |
             org.opencontainers.image.title=${{ inputs.service-name }}
             org.opencontainers.image.language=${{ inputs.language }}
@@ -92,12 +102,13 @@ jobs:
           cache-from: type=gha,scope=${{ inputs.service-name }}-${{ inputs.language }}
           cache-to: type=gha,mode=max,scope=${{ inputs.service-name }}-${{ inputs.language }}
 
-      - name: Ensure .trivyignore exists
+      - name: Prepare .trivyignore for scan
         run: |
-          if [ ! -f "${{ inputs.service-path }}/.trivyignore" ]; then
-            touch "${{ inputs.service-path }}/.trivyignore"
-            echo "Created empty .trivyignore for ${{ inputs.service-path }}"
+          if [ -f "${{ inputs.service-path }}/.trivyignore" ]; then
+            cat "${{ inputs.service-path }}/.trivyignore" >> .trivyignore
           fi
+          echo "Active .trivyignore entries for ${{ inputs.service-name }}:"
+          cat .trivyignore
 
       - name: Run Trivy Vulnerability Scan(critial & high)
         uses: aquasecurity/trivy-action@master
@@ -107,10 +118,11 @@ jobs:
           severity: CRITICAL,HIGH
           exit-code: "1"
           ignore-unfixed: true
-          trivyignores: ${{ inputs.service-path }}/.trivyignore  # white list CVVE
+          trivyignores: .trivyignore
 
       - name: push docker image to registry
-        if : inputs.push-image && steps.auth-check.outputs.has_auth == 'true'
+        if: inputs.push-image && steps.auth-check.outputs.has_auth == 'true'
         run: |
           docker push ${{ steps.meta.outputs.image-tag }}
+          docker push ${{ steps.meta.outputs.env-tag }}
           

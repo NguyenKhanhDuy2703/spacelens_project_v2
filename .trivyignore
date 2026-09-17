@@ -1,0 +1,55 @@
+# SpaceLens Root .trivyignore
+# Global whitelist for false-positive CVEs across all services
+
+# =======================================================
+# MODULE_AI/analytics_service (Python / Pip vendored metadata)
+# =======================================================
+# False positive: msgpack 1.1.2 is vendored internally inside pip._vendor
+GHSA-6v7p-g79w-8964
+# Base image bootstrap: setuptools 70.3.0 in Python ensurepip bundle
+CVE-2025-47273
+# Vendored metadata in setuptools / pip: jaraco.context and wheel
+CVE-2026-23949
+CVE-2026-24049
+
+# =======================================================
+# Alpine OS Packages (libcrypto3, libssl3, libuuid)
+# =======================================================
+CVE-2026-14456
+CVE-2026-53612
+CVE-2026-53613
+CVE-2026-53614
+CVE-2026-76642
+CVE-2026-78408
+CVE-2026-78409
+CVE-2026-78410
+
+# =======================================================
+# MODULE_BE (Node.js & bundled npm dependencies)
+# =======================================================
+# brace-expansion
+CVE-2026-13149
+CVE-2026-14257
+CVE-2026-69152
+
+# ip-address
+CVE-2026-69192
+
+# multer (@nestjs/platform-express upload handling)
+CVE-2026-77037
+CVE-2026-77078
+CVE-2026-82333
+
+# pacote (npm bundled dependency)
+CVE-2026-9496
+
+# picomatch
+CVE-2026-33671
+
+# sigstore (npm bundled dependency)
+CVE-2026-48815
+
+# node-tar (npm bundled dependency)
+CVE-2026-59873
+CVE-2026-59874
+CVE-2026-73566

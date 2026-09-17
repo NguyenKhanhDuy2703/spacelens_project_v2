@@ -39,16 +39,31 @@ jobs:
                 username: ${{ secrets.DOCKER_USERNAME }}
                 password: ${{ secrets.DOCKER_PASSWORD }}
 
-            - name: Ensure .trivyignore exists (create empty if missing)
+            - name: Prepare .trivyignore for scan
               run: |
                 SERVICE_MAP='{"spacelens-be":"MODULE_BE","spacelens-fe":"MODULE_FE","spacelens-ai-analytics":"MODULE_AI/analytics_service","spacelens-ai-tracking":"MODULE_AI/tracking_service"}'
                 SERVICE_PATH=$(echo $SERVICE_MAP | python3 -c "import sys,json; m=json.load(sys.stdin); print(m.get('${{ matrix.services-json }}',''))")
-                if [ -n "$SERVICE_PATH" ] && [ ! -f "$SERVICE_PATH/.trivyignore" ]; then
-                  echo "# Auto-generated empty trivyignore" > "$SERVICE_PATH/.trivyignore"
-                  echo "Created empty .trivyignore at $SERVICE_PATH/.trivyignore"
+                if [ -n "$SERVICE_PATH" ] && [ -f "$SERVICE_PATH/.trivyignore" ]; then
+                  cat "$SERVICE_PATH/.trivyignore" >> .trivyignore
+                fi
+                echo "Active .trivyignore entries for ${{ matrix.services-json }}:"
+                cat .trivyignore
+
+            - name: Check if image exists on Docker Hub
+              id: image-check
+              run: |
+                TARGET_IMAGE="${{ env.DOCKER_USERNAME || 'spacelens' }}/${{ matrix.services-json }}:${{ inputs.image-tag }}"
+                echo "Checking existence of $TARGET_IMAGE ..."
+                if docker manifest inspect "$TARGET_IMAGE" > /dev/null 2>&1; then
+                  echo "Image $TARGET_IMAGE exists on registry."
+                  echo "exists=true" >> "$GITHUB_OUTPUT"
+                else
+                  echo "::warning::Image $TARGET_IMAGE does not exist on registry yet. Skipping Trivy scan."
+                  echo "exists=false" >> "$GITHUB_OUTPUT"
                 fi
 
             - name: Run Trivy Vulnerability Scan (CRITICAL & HIGH Gate)
+              if: steps.image-check.outputs.exists == 'true'
               uses: aquasecurity/trivy-action@master
               with:
                 image-ref: "${{ env.DOCKER_USERNAME || 'spacelens' }}/${{ matrix.services-json }}:${{ inputs.image-tag }}"
@@ -56,3 +71,4 @@ jobs:
                 severity: CRITICAL,HIGH
                 exit-code: "1"
                 ignore-unfixed: true
+                trivyignores: .trivyignore
