@@ -17,7 +17,15 @@ async function bootstrap() {
     app.setGlobalPrefix(prefixApi)
   }
   // 1. Enable CORS
-  app.enableCors();
+  const allowedOrigins = [
+    configService.get<string>('frontEnd.production'),
+    configService.get<string>('frontEnd.dev'),
+  ].filter(Boolean) as string[];
+  app.enableCors({
+    origin: allowedOrigins.length > 0 ? allowedOrigins : '*', 
+    credentials: true, 
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+  });
 
   // 2. Global automated validation pipe
   app.useGlobalPipes(

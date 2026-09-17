@@ -5,13 +5,14 @@ import appConfig from "./configs/app.config";
 import databaseConfig from "./configs/database.config";
 import CameraModule  from "./modules/camera/camera.module";
 import {AppController} from './app.controller';
+import frontendConfig from './configs/frontend.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: [".env", "../.env"],
-      load: [appConfig, databaseConfig],
+      load: [appConfig, databaseConfig , frontendConfig],
     }),
     MongooseModule.forRootAsync({
       inject: [ConfigService],
