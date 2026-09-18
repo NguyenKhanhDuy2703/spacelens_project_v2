@@ -33,6 +33,7 @@ jobs:
       ai-tracking: ${{ steps.filter.outputs.ai-tracking }}
       workflows: ${{ steps.filter.outputs.workflows }}
       short-sha: ${{ steps.vars.outputs.short-sha }}
+      services-to-scan: ${{ steps.build-scan-matrix.outputs.services }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -62,6 +63,33 @@ jobs:
               - 'MODULE_AI/tracking_service/**'
             workflows:
               - '.github/workflows/**'
+
+      - name: Build Services Scan Matrix
+        id: build-scan-matrix
+        run: |
+          SERVICES=()
+          if [ "${{ steps.filter.outputs.be }}" = "true" ]; then
+            SERVICES+=("spacelens-be")
+          fi
+          if [ "${{ steps.filter.outputs.fe }}" = "true" ]; then
+            SERVICES+=("spacelens-fe")
+          fi
+          if [ "${{ steps.filter.outputs.ai-analytics }}" = "true" ]; then
+            SERVICES+=("spacelens-ai-analytics")
+          fi
+          if [ "${{ steps.filter.outputs.ai-tracking }}" = "true" ]; then
+            SERVICES+=("spacelens-ai-tracking")
+          fi
+
+          if [ ${#SERVICES[@]} -eq 0 ]; then
+            JSON_SERVICES="[]"
+          else
+            JSON_SERVICES=$(printf '%s\n' "${SERVICES[@]}" | jq -R . | jq -s -c .)
+          fi
+          
+          echo "services=$JSON_SERVICES" >> "$GITHUB_OUTPUT"
+          echo "Các service được chọn để scan: $JSON_SERVICES"
+          
   test-be:
     name: "Backend Unit Test"
     needs: [detect-changes]
@@ -134,17 +162,27 @@ jobs:
     name: "Scan Docker Images (Staging Security Gate)"
     needs: [detect-changes]
     if: |
-      (github.event_name == 'pull_request' && (github.base_ref == 'main' || github.base_ref == 'staging')) ||
-      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging'))
+      needs.detect-changes.outputs.services-to-scan != '[]' &&
+      ((github.event_name == 'pull_request' && (github.base_ref == 'main' || github.base_ref == 'staging')) ||
+       (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')))
     uses: ./.github/workflows/_trivy-scan-worker.yml
     with:
+<<<<<<< Updated upstream
       image-tag: ${{ needs.detect-changes.outputs.short-sha }}
       services: '["spacelens-be", "spacelens-fe", "spacelens-ai-analytics", "spacelens-ai-tracking"]'
+=======
+      image-tag: "dev"
+      services: ${{ needs.detect-changes.outputs.services-to-scan }}
+>>>>>>> Stashed changes
     secrets: inherit
 
   deploy-staging:
     name: "Promote & Deploy to Staging"
     needs: [detect-changes, scan-images]
+    if: |
+      always() &&
+      (needs.scan-images.result == 'success' || needs.scan-images.result == 'skipped') &&
+      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging'))
     uses: ./.github/workflows/_promote-worker.yml
     with:
       source-tag: ${{ needs.detect-changes.outputs.short-sha }}
