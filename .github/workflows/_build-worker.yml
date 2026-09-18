@@ -80,7 +80,9 @@ jobs:
             REGISTRY_PREFIX="spacelens"
           fi
           IMAGE_TAG="${REGISTRY_PREFIX}/${{ inputs.service-name }}:${SHORT_SHA}"
+          ENV_TAG="${REGISTRY_PREFIX}/${{ inputs.service-name }}:dev"
           echo "image-tag=${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
+          echo "env-tag=${ENV_TAG}" >> "$GITHUB_OUTPUT"
           echo "short-sha=${SHORT_SHA}" >> "$GITHUB_OUTPUT"
 
       - name: Build and Push Docker Image
@@ -90,7 +92,9 @@ jobs:
           file: ${{ inputs.service-path }}/${{ inputs.dockerfile }}
           push: false
           load: true
-          tags: ${{ steps.meta.outputs.image-tag }}
+          tags: |
+            ${{ steps.meta.outputs.image-tag }}
+            ${{ steps.meta.outputs.env-tag }}
           labels: |
             org.opencontainers.image.title=${{ inputs.service-name }}
             org.opencontainers.image.language=${{ inputs.language }}
@@ -117,7 +121,8 @@ jobs:
           trivyignores: .trivyignore
 
       - name: push docker image to registry
-        if : inputs.push-image && steps.auth-check.outputs.has_auth == 'true'
+        if: inputs.push-image && steps.auth-check.outputs.has_auth == 'true'
         run: |
           docker push ${{ steps.meta.outputs.image-tag }}
+          docker push ${{ steps.meta.outputs.env-tag }}
           

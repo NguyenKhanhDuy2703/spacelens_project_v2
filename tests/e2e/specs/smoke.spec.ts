@@ -17,8 +17,8 @@ test.describe('SpaceLens Staging Environment: E2E Smoke & Health Check', () => {
   });
 
   test('TC02: Verify tab navigation workflow', async ({ page }) => {
-    // 1. Tab mặc định: Camera Devices Management
-    await expect(page.getByText('Camera Devices Management', { exact: false })).toBeVisible();
+    // 1. Tab mặc định: Camera Devices
+    await expect(page.getByText('Camera Devices', { exact: false })).toBeVisible();
 
     // 2. Chuyển sang Tab "ZONES"
     await page.click('button:has-text("ZONES")');
@@ -28,13 +28,13 @@ test.describe('SpaceLens Staging Environment: E2E Smoke & Health Check', () => {
     await page.click('button:has-text("USERS")');
     await expect(page.getByText('USERS & ACCESS PERMISSIONS')).toBeVisible();
 
-    // 4. Chuyển sang Tab "AUDITS"
-    await page.click('button:has-text("AUDITS")');
+    // 4. Chuyển sang Tab "AUDIT"
+    await page.click('button:has-text("AUDIT")');
     await expect(page.getByText('CONNECTION & AUDIT LOGS')).toBeVisible();
 
     // 5. Chuyển sang Tab "SETTINGS"
     await page.click('button:has-text("SETTINGS")');
-    await expect(page.getByText('SYSTEM SETTINGS')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'SYSTEM SETTINGS' })).toBeVisible();
   });
 
   test('TC03: Verify Camera Management Studio core layout', async ({ page }) => {

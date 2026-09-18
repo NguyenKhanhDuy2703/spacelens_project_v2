@@ -55,6 +55,11 @@ jobs:
           for svc in $(echo "$SERVICES" | jq -r '.[]'); do
             SRC="${REGISTRY_PREFIX}/${svc}:${{ inputs.source-tag }}"
             DST="${REGISTRY_PREFIX}/${svc}:${{ inputs.target-tag }}"
+            echo "Checking source image: $SRC"
+            if ! docker manifest inspect "$SRC" > /dev/null 2>&1; then
+              echo "::warning::Source image $SRC does not exist on registry yet. Skipping promote for $svc."
+              continue
+            fi
             echo "Promoting $SRC -> $DST"
             # Fast promotion via manifest copying without downloading layers
             if ! docker buildx imagetools create --tag "$DST" "$SRC"; then

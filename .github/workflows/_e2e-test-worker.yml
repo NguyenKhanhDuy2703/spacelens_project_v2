@@ -46,10 +46,13 @@ jobs:
           username: ${{ env.DOCKER_USERNAME }}
           password: ${{ env.DOCKER_PASSWORD }}
 
-      - name: Pull Staging Docker Images
+      - name: Pull or Build Staging Docker Images
         run: |
-          docker pull ${REGISTRY_PREFIX}/spacelens-be:${IMAGE_TAG}
-          docker pull ${REGISTRY_PREFIX}/spacelens-fe:${IMAGE_TAG}
+          echo "Attempting to pull staging images with tag ${IMAGE_TAG}..."
+          if ! (docker pull ${REGISTRY_PREFIX}/spacelens-be:${IMAGE_TAG} && docker pull ${REGISTRY_PREFIX}/spacelens-fe:${IMAGE_TAG}); then
+            echo "::warning::Staging images not found on registry (cold start). Building locally from source for E2E..."
+            docker compose -f docker-compose.e2e.yml build
+          fi
 
       - name: Start Staging Stack via Docker Compose
         run: |
